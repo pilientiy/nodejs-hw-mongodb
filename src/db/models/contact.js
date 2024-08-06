@@ -1,7 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { contactType } from '../../constans/contacts.js';
 
-const contactSchema = new Schema(
+const contactsSchema = new Schema(
   {
     name: {
       type: String,
@@ -15,17 +14,17 @@ const contactSchema = new Schema(
       type: String,
       required: false,
     },
-    isFavourite: {
+    isFavorite: {
       type: Boolean,
       default: false,
     },
     contactType: {
       type: String,
-      enum: contactType,
-      required: true,
+      enum: ['work', 'home', 'personal'],
       default: 'personal',
     },
   },
-  { versionKey: false, timestamps: true },
+  { timestamps: true, versionKey: false }
 );
-export const ContactsCollection = model('contacts', contactSchema);
+
+export const ContactsCollection = model('contacts', contactsSchema);

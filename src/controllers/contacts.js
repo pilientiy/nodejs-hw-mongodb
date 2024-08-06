@@ -1,35 +1,35 @@
+import { getAllContacts, getContactById, createContact, deleteContact, updateContact } from '../services/contacts.js';
 import createHttpError from 'http-errors';
-import {
-  getAllContacts,
-  getContactById,
-  addContact,
-  updateContact,
-  deleteContact,
-} from '../services/contacts.js';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
-import { fieldList } from '../constans/fieldList.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
 
-export const getAllContactsController = async (req, res, next) => {
-  const { page, perPage } = parsePaginationParams(req.query);
-  const { sortBy, sortOrder } = parseSortParams(req.query, fieldList);
-  const contacts = await getAllContacts({
-    page,
-    perPage,
-    sortBy,
-    sortOrder,
-  });
+export const getContactsController = async (
+  req,
+  res,
+	next,
+) => {
+  try {
+    const { page, perPage } = parsePaginationParams(req.query);
+    const { sortBy, sortOrder } = parseSortParams(req.query);
+    const filter = parseFilterParams(req.query);
 
-  if (contacts.length === 0) {
-    next(createHttpError(404, 'Contacts not found'));
-    return;
-  }
+	  const contacts = await getAllContacts({
+     page,
+     perPage,
+     sortBy,
+     sortOrder,
+     filter,
+   });
 
-  res.status(200).json({
-    status: 200,
-    message: 'Successfully found contacts!',
-    data: contacts,
-  });
+	  res.json({
+	    status: 200,
+	    message: 'Successfully found students!',
+	    data: contacts,
+	  });
+	} catch(err) {
+		next(err);
+	}
 };
 
 export const getContactByIdController = async (req, res, next) => {
@@ -37,55 +37,62 @@ export const getContactByIdController = async (req, res, next) => {
   const contact = await getContactById(contactId);
 
   if (!contact) {
+    
     next(createHttpError(404, 'Contact not found'));
     return;
   }
-  res.status(200).json({
+
+  res.json({
     status: 200,
     message: `Successfully found contact with id ${contactId}!`,
     data: contact,
   });
 };
 
-export const addContactController = async (req, res, next) => {
-  const contact = await addContact(req.body);
 
-  if (!contact) {
-    next(createHttpError(404, 'Contact not added'));
+
+export const createContactController = async (req, res, next) => {
+  const { name, phoneNumber } = req.body;
+
+  if (!name || !phoneNumber) {
+    next(createHttpError(400, 'Name and phoneNumber are required'));
     return;
   }
+  delete req.body._V;
+  const newContact = await createContact(req.body);
 
   res.status(201).json({
     status: 201,
-    message: 'Successfully created a contact!',
-    data: contact,
+    message: `Successfully created a contact!`,
+    data: newContact,
   });
 };
 
-export const patchContactController = async (req, res) => {
+export const deleteContactController = async (req, res, next) => {
   const { contactId } = req.params;
-  const result = await updateContact({ _id: contactId }, req.body);
 
-  if (!result) {
-    throw createHttpError(404, 'Contact not found');
+  const contact = await deleteContact(contactId);
+
+  if (!contact) {
+    next(createHttpError(404, 'Contact not found', { message: 'Contact not found' }));
+    return;
   }
 
-  res.status(200).json({
+  res.status(204).send();
+};
+
+export const patchContactController = async (req, res, next) => {
+  const { contactId } = req.params;
+  const result = await updateContact(contactId, req.body);
+
+  if (!result) {
+    next(createHttpError(404, 'Contact not found',   { message: 'Contact not found' } ));
+    return;
+  }
+
+  res.json({
     status: 200,
-    message: 'Successfully patched a contact!',
-    data: result.data,
-  });
-};
-
-export const deleteContactController = async (req, res) => {
-  const { contactId } = req.params;
-  const result = await deleteContact({ _id: contactId });
-
-  if (!result) {
-    throw createHttpError(404, 'Contact not found');
-  }
-
-  res.status(204).json({
-    status: 204,
+    message: `Successfully patched a contact!`,
+    data: result.contact,
   });
 };
