@@ -1,9 +1,14 @@
-import { initMongoConnection } from './db/initMongoConnection.js';
+import { initMongoDB } from './db/initMongoDB.js';
 import { setupServer } from './server.js';
 
 const bootstrap = async () => {
-  await initMongoConnection();
+  await initMongoDB();
   setupServer();
+};
+
+export const SORT_ORDER = {
+  ASC: 'asc',
+  DESC: 'desc',
 };
 
 bootstrap();
