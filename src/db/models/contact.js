@@ -1,48 +1,37 @@
+import { Schema, model } from 'mongoose';
 
-import {model, Schema } from 'mongoose';
-
-const contactsSchema = new Schema(
+const contactSchema = new Schema(
   {
     name: {
       type: String,
       required: true,
     },
-
-    phoneNumber:{
+    phoneNumber: {
       type: String,
       required: true,
     },
-
     email: {
       type: String,
       required: false,
-
     },
-     isFavourite: {
+    isFavourite: {
       type: Boolean,
-      required: true,
+      required: false,
       default: false,
     },
-
     contactType: {
       type: String,
-      required: true,
       enum: ['work', 'home', 'personal'],
+      required: true,
       default: 'personal',
     },
-
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'users'
-    }, 
-
-
+    userId: { type: Schema.Types.ObjectId, ref: 'users' },
   },
-
   {
     timestamps: true,
     versionKey: false,
   },
 );
 
-export const ContactsCollection = model('contacts', contactsSchema);
+const ContactsCollection = model('сontacts', contactSchema);
+export default ContactsCollection;
