@@ -6,38 +6,40 @@ export const authenticate = async (req, res, next) => {
   const authHeader = req.get('Authorization');
 
   if (!authHeader) {
-    return next(createHttpError(401, 'Please provide Authorization header'));
+    next(createHttpError(401, 'Please provide Authorization header'));
+    return;
   }
 
   const bearer = authHeader.split(' ')[0];
   const token = authHeader.split(' ')[1];
 
   if (bearer !== 'Bearer' || !token) {
-    return next(createHttpError(401, 'Auth header should be of type Bearer'));
+    next(createHttpError(401, 'Auth header should be of type Bearer'));
+    return;
   }
 
   const session = await SessionsCollection.findOne({ accessToken: token });
 
   if (!session) {
-    return next(createHttpError(401, 'Session not found'));
+    next(createHttpError(401, 'Session not found'));
+    return;
   }
 
   const isAccessTokenExpired =
     new Date() > new Date(session.accessTokenValidUntil);
 
   if (isAccessTokenExpired) {
-    return next(createHttpError(401, 'Access token is expired'));
+    next(createHttpError(401, 'Access token expired'));
   }
 
   const user = await UsersCollection.findById(session.userId);
 
   if (!user) {
-    return next(
-      createHttpError(401, 'User associated with this session is not found!'),
-    );
+    next(createHttpError(401));
+    return;
   }
 
   req.user = user;
 
-  return next();
+  next();
 };

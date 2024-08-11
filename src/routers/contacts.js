@@ -1,40 +1,31 @@
+
 import { Router } from 'express';
 import {
+  getContactsController,
+  getContactByIdController,
   createContactController,
   deleteContactController,
-  getAllContactsController,
-  getContactByIdController,
   patchContactController,
 } from '../controllers/contacts.js';
-
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
-import { isValidId } from '../middlewares/isValidId.js';
 import { validateBody } from '../middlewares/validateBody.js';
-import { createContactSchema } from '../validation/createContactSchema.js';
-import { updateContactSchema } from '../validation/updateContactSchema.js';
+import { isValidId } from '../middlewares/isValidId.js';
+import { createContactSchema, updateContactSchema } from '../validation/contacts.js';
 import { authenticate } from '../middlewares/authenticate.js';
+import { upload } from '../middlewares/multer.js';
 
 const contactsRouter = Router();
 
-contactsRouter.use('/:contactId', isValidId);
-contactsRouter.use('/', authenticate);
+contactsRouter.use(authenticate);
 
-contactsRouter.get('/', ctrlWrapper(getAllContactsController));
+contactsRouter.get('/', ctrlWrapper(getContactsController));
 
-contactsRouter.get('/:contactId', ctrlWrapper(getContactByIdController));
+contactsRouter.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
 
-contactsRouter.post(
-  '/',
-  validateBody(createContactSchema),
-  ctrlWrapper(createContactController),
-);
+contactsRouter.post('/', upload.single('photo'), validateBody(createContactSchema), ctrlWrapper(createContactController));
 
-contactsRouter.patch(
-  '/:contactId',
-  validateBody(updateContactSchema),
-  ctrlWrapper(patchContactController),
-);
+contactsRouter.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
 
-contactsRouter.delete('/:contactId', ctrlWrapper(deleteContactController));
+contactsRouter.patch('/:contactId', isValidId, upload.single('photo'), validateBody(updateContactSchema), ctrlWrapper(patchContactController));
 
 export default contactsRouter;
